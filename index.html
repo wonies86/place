@@ -1501,21 +1501,26 @@ function openRandom(){
       subEl = $("#randSub", sheet), eyebrowEl = $("#randEyebrow", sheet),
       regionRow = $("#randRegionRow", sheet), actionsEl = $("#randActions", sheet);
 
+  function wishNow(){ return state.entries.filter(function(e){ return e.status === "가보자"; }); }
+
   function pool(){
-    return randRegion === "전체" ? wish : wish.filter(function(e){ return regionOf(e) === randRegion; });
+    var w = wishNow();
+    return randRegion === "전체" ? w : w.filter(function(e){ return regionOf(e) === randRegion; });
   }
 
   function paintRegions(){
     var p = pool();
+    var w = wishNow();
     regionRow.innerHTML = ["전체"].concat(regions).map(function(r){
       var key = r === "전체" ? "전체" : r;
-      var n = key === "전체" ? wish.length : wish.filter(function(e){ return regionOf(e) === key; }).length;
+      var n = key === "전체" ? w.length : w.filter(function(e){ return regionOf(e) === key; }).length;
       var on = randRegion === key;
       return '<button type="button" class="chip' + (on ? " on" : "") + '" data-rand-region="' + esc(key) + '" aria-pressed="' + on + '" aria-label="' +
         esc(key === "전체" ? "전체 지역에서 뽑기" : key + "에서 뽑기, " + n + "곳") + '">' +
         esc(key === "전체" ? "전체 지역" : key) + (key === "전체" ? "" : '<span class="chip-n" aria-hidden="true">' + n + '</span>') + '</button>';
     }).join("");
-    eyebrowEl.textContent = "Today’s Pick · " + (randRegion === "전체" ? "가보자" : randRegion) + " " + p.length + "곳 중에서";
+    eyebrowEl.textContent = "Today’s Pick · " + (randRegion === "전체" ? "가보자" : randRegion) +
+      (p.length ? " " + p.length + "곳 중에서" : "");
   }
 
   function showNoCandidates(){
