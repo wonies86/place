@@ -21,7 +21,7 @@ create table if not exists public.place_entries (
   link2_label    text default '',
   link2_url      text default '',
   memo           text default '',                     -- 자유 메모
-  author         text default '',                     -- 주형 | 여자친구
+  author         text default '',                     -- (예전 버전 호환용 · 앱에서는 쓰지 않음, 항상 빈 값)
   status         text not null default '가보자',
   rating         numeric(2,1),                        -- 다녀옴일 때 별점 0~5
   review         text default '',                     -- 다녀온 한 줄 후기
@@ -39,6 +39,7 @@ alter table public.place_entries add column if not exists link1_url      text de
 alter table public.place_entries add column if not exists link2_label    text default '';
 alter table public.place_entries add column if not exists link2_url      text default '';
 alter table public.place_entries add column if not exists memo           text default '';
+-- author: 예전 스키마와의 호환을 위해 칼럼만 남깁니다. 앱은 이 값을 읽지도 쓰지도 않습니다.
 alter table public.place_entries add column if not exists author         text default '';
 alter table public.place_entries add column if not exists rating         numeric(2,1);
 alter table public.place_entries add column if not exists review         text default '';
@@ -126,15 +127,14 @@ alter table public.place_entries replica identity full;
 -- ------------------------------------------------------------
 -- insert into public.place_entries
 --   (name, category, region, recommend_menu, visit_month, link1_label, link1_url,
---    memo, author, status, rating, review, is_sample)
+--    memo, status, rating, review, is_sample)
 -- values
 --   ('금돼지식당', '맛집', '성수', '🥩 삼겹살 · 목살', '🌙 11월', '인스타그램',
 --    'https://www.instagram.com/explore/tags/금돼지식당/',
---    '웨이팅이 길다는 소문. 오픈 30분 전에 가서 이름 걸어두기.', '주형', '가보자', null, '', true),
---   ('낙산공원', '명소', '한양도성', '🌇 노을 · 성곽길 산책', '🍂 10월', '네이버지도',
---    'https://map.naver.com/p/search/낙산공원',
---    '해 지기 40분 전에 올라가면 서울이 통째로 보임.', '여자친구', '다녀옴', 5,
---    '노을 타이밍이 진짜 미쳤음. 또 가자', true);
+--    '웨이팅이 길다는 소문. 오픈 30분 전에 가서 이름 걸어두기.', '가보자', null, '', true);
+
+-- 예전 버전에서 예시 8개를 넣었다면, 예시만 정리하고 싶을 때:
+-- delete from public.place_entries where is_sample and name <> '금돼지식당';
 
 -- 확인용
 -- select name, category, region, status, created_at

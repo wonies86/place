@@ -180,9 +180,17 @@ li{list-style:none}
 }
 .chip:hover{border-color:var(--ink-4)}
 .chip.on{background:var(--ink);border-color:var(--ink);color:#FAF8F3}
+.chip-n{margin-left:4px;font-size:9.5px;font-weight:700;opacity:.62}
 .chiprow-sm{margin-top:7px}
 .chiprow-sm .chip{padding:5px 10px;font-size:11.5px;color:var(--ink-3)}
 .chiprow-sm .chip.on{background:var(--accent-soft);border-color:var(--accent-line);color:var(--accent)}
+.chiprow-region .chip.on{background:var(--accent);border-color:var(--accent);color:#FFF7F2}
+.sortrow{display:flex;align-items:center;gap:8px;margin-top:9px}
+.sort-k{flex:0 0 auto;font-size:9.5px;font-weight:600;letter-spacing:.14em;color:var(--ink-4);text-transform:uppercase}
+.seg-mini{display:flex;gap:2px;padding:2px;background:#fff;border:1px solid var(--line);border-radius:999px}
+.seg-mini button{padding:4px 11px;border-radius:999px;font-size:11.5px;font-weight:600;color:var(--ink-3);white-space:nowrap;transition:background .14s,color .14s}
+.seg-mini button:hover{color:var(--ink-2)}
+.seg-mini button.on{background:var(--ink);color:var(--paper)}
 
 /* ---------- alphabet index ---------- */
 .alpha{
@@ -224,6 +232,12 @@ li{list-style:none}
 }
 .letter-line{flex:1;height:1px;background:var(--line)}
 .letter-count{font-size:9.5px;letter-spacing:.14em;color:var(--ink-4);text-transform:uppercase;white-space:nowrap}
+.region-glyph{
+  display:inline-flex;align-items:center;gap:6px;min-width:0;max-width:60vw;
+  font-family:var(--serif);font-size:18px;font-weight:700;line-height:1.2;letter-spacing:-.02em;
+  color:var(--accent);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.region-glyph .rg-pin{font-size:12px;line-height:1;flex:0 0 auto}
 .entries{display:grid;gap:9px}
 .entry{
   position:relative;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 10px;
@@ -273,7 +287,6 @@ li{list-style:none}
 .pill.done{background:var(--green-soft);color:var(--green);border-color:var(--green-line)}
 button.pill:hover{filter:brightness(.97)}
 .stars{font-size:10.5px;color:var(--accent);letter-spacing:.04em;line-height:1}
-.author{font-size:10.5px;color:var(--ink-3);line-height:1.2}
 .mini-link{
   width:24px;height:24px;border-radius:7px;border:1px solid var(--line);background:#FDFBF7;
   display:grid;place-items:center;font-size:11px;color:var(--ink-3);
@@ -444,6 +457,13 @@ textarea.input{resize:vertical;min-height:64px;line-height:1.6}
 .rand-card .rc-line b{font-weight:600;color:var(--ink-3);font-size:9.5px;letter-spacing:.1em;margin-right:6px}
 .rand-actions{display:flex;gap:8px;margin-top:16px}
 .rand-actions .btn{flex:1;padding:12px 10px;font-size:12.5px}
+.rand-region{margin:4px 0 0;padding-bottom:12px;border-bottom:1px solid var(--line-2);text-align:left}
+.rand-region-k{font-size:9.5px;font-weight:600;letter-spacing:.16em;color:var(--ink-4);text-transform:uppercase;margin-bottom:7px}
+.rand-region .chiprow{margin-top:0;padding-bottom:1px}
+.rand-region .chip{padding:6px 11px;font-size:12px}
+.rand-region .chip.on{background:var(--accent);border-color:var(--accent);color:#FFF7F2}
+.rand-empty-acts{display:flex;gap:8px;margin-top:10px}
+.rand-empty-acts .btn{flex:1;padding:9px 8px;font-size:11.5px}
 .dice{font-size:30px;line-height:1;display:block;margin-bottom:2px}
 
 /* ---------- settings ---------- */
@@ -537,7 +557,15 @@ body.sheet-open .toast{bottom:calc(86px + env(safe-area-inset-bottom))}
       <button class="qclear" id="qClear" type="button" aria-label="검색어 지우기" hidden>✕</button>
     </div>
     <div class="chiprow" id="catRow" role="group" aria-label="카테고리 필터"></div>
+    <div class="chiprow chiprow-sm chiprow-region" id="regionRow" role="group" aria-label="지역 필터" hidden></div>
     <div class="chiprow chiprow-sm" id="statusRow" role="group" aria-label="상태 필터"></div>
+    <div class="sortrow" id="sortRow" role="group" aria-label="정렬 방식" hidden>
+      <span class="sort-k">정렬</span>
+      <div class="seg-mini" id="sortSeg">
+        <button type="button" data-sort="letter" class="on">ㄱ~ㅎ 순</button>
+        <button type="button" data-sort="region">📍 지역별</button>
+      </div>
+    </div>
   </section>
 
   <nav class="alpha" id="alpha" aria-label="초성과 알파벳 인덱스"></nav>
@@ -566,8 +594,10 @@ var LS = {
   entries: "placeDict.entries.v1",
   cfg: "placeDict.supabase.v1",
   title: "placeDict.title.v1",
-  notice: "placeDict.notice.v1"
+  notice: "placeDict.notice.v1",
+  sampleVersion: "placeDict.sample.v1"
 };
+var SAMPLE_VERSION = "2";
 var KOR = ["ㄱ","ㄴ","ㄷ","ㄹ","ㅁ","ㅂ","ㅅ","ㅇ","ㅈ","ㅊ","ㅋ","ㅌ","ㅍ","ㅎ"];
 var ENG = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
 var ORDER = KOR.concat(ENG, ["#"]);
@@ -579,7 +609,6 @@ var CATS = [
   {key:"놀거리", emoji:"🎬"}
 ];
 var STATUSES = ["전체", "📌 가보자", "✅ 다녀옴"];
-var AUTHORS = ["주형", "여자친구"];
 var LINK_LABELS = ["인스타그램","네이버지도","유튜브","블로그","홈페이지","기타"];
 var DEFAULT_TITLE = "먹고 걷는 사전";
 
@@ -687,7 +716,9 @@ var state = {
   entries: [],
   q: "",
   cat: "전체",
+  region: "전체",
   status: "전체",
+  sort: "letter",
   mode: "demo",
   cfg: null,
   client: null,
@@ -705,49 +736,7 @@ var SAMPLES = [
     name:"금돼지식당", category:"맛집", region:"성수", menu:"🥩 삼겹살 · 목살", month:"🌙 11월",
     links:[{label:"인스타그램", url:"https://www.instagram.com/explore/tags/금돼지식당/"}],
     memo:"웨이팅이 길다는 소문. 오픈 30분 전에 가서 이름 걸어두고 근처 카페에서 기다리기.",
-    author:"주형", status:"가보자"
-  },
-  {
-    name:"낙산공원", category:"명소", region:"한양도성", menu:"🌇 노을 · 성곽길 산책", month:"🍂 10월",
-    links:[{label:"네이버지도", url:"https://map.naver.com/p/search/낙산공원"}],
-    memo:"해 지기 40분 전에 올라가면 서울이 통째로 보임. 다음엔 돗자리 들고 가기.",
-    author:"여자친구", status:"다녀옴", rating:5, review:"노을 타이밍이 진짜 미쳤음. 또 가자"
-  },
-  {
-    name:"몽탄", category:"맛집", region:"을지로", menu:"🥩 우대갈비 · 된장찌개", month:"🌙 12월",
-    links:[{label:"네이버지도", url:"https://map.naver.com/p/search/몽탄"}],
-    memo:"예약은 어렵고 오픈런이 편하다고. 겨울에 고기 + 된장찌개 조합.",
-    author:"주형", status:"가보자"
-  },
-  {
-    name:"밀락더마켓", category:"명소", region:"부산 광안리", menu:"🎡 루프탑 야경 · 푸드코트", month:"🌊 8월",
-    links:[{label:"인스타그램", url:"https://www.instagram.com/explore/tags/밀락더마켓/"}],
-    memo:"광안대교 보이는 루프탑. 여름밤에 바람 맞으며 한 바퀴 돌기.",
-    author:"여자친구", status:"가보자"
-  },
-  {
-    name:"서울숲", category:"명소", region:"성수", menu:"🌳 산책 · 피크닉", month:"🌸 5월",
-    links:[{label:"네이버지도", url:"https://map.naver.com/p/search/서울숲"}],
-    memo:"벚꽃 끝물에 사람 적을 때. 편의점에서 김밥 사서 잔디에 앉기.",
-    author:"주형", status:"가보자"
-  },
-  {
-    name:"을지로 노가리골목", category:"바·술집", region:"을지로", menu:"🍶 노가리 · 생맥주", month:"🌙 11월",
-    links:[{label:"네이버지도", url:"https://map.naver.com/p/search/을지로 노가리골목"}],
-    memo:"퇴근길에 한 잔. 겨울에 두꺼운 옷 입고 야장에 앉는 맛.",
-    author:"여자친구", status:"다녀옴", rating:4, review:"사람 많지만 분위기 좋아서 한 잔 하기 딱"
-  },
-  {
-    name:"Aoyama Flower Market Tea House", category:"카페", region:"도쿄", menu:"🌸 플라워 티하우스 · 허브티", month:"🌸 4월",
-    links:[{label:"인스타그램", url:"https://www.instagram.com/explore/tags/aoyamaflowermarket/"}],
-    memo:"꽃가게 안쪽에 있는 티룸. 오픈 직후에 가면 한적하다고.",
-    author:"여자친구", status:"가보자"
-  },
-  {
-    name:"Katz's Delicatessen", category:"맛집", region:"뉴욕", menu:"🥪 파스트라미 샌드위치", month:"🍁 9월",
-    links:[{label:"홈페이지", url:"https://katzsdelicatessen.com"}],
-    memo:"주문표 들고 줄 서는 곳. 파스트라미는 꼭 따뜻하게.",
-    author:"주형", status:"가보자"
+    status:"가보자"
   }
 ];
 
@@ -757,7 +746,7 @@ function seedEntries(){
     var d = new Date(base + i*1000*60*37).toISOString();
     return normalize({
       id: uid(), name:s.name, category:s.category, region:s.region, menu:s.menu, month:s.month,
-      links:s.links||[], memo:s.memo, author:s.author, status:s.status, rating:s.rating||0,
+      links:s.links||[], memo:s.memo, status:s.status, rating:s.rating||0,
       review:s.review||"", is_sample:true, created_at:d, updated_at:d
     });
   });
@@ -779,7 +768,6 @@ function normalize(e){
     month: String(e.month||"").trim(),
     links: links,
     memo: String(e.memo||""),
-    author: String(e.author||"").trim(),
     status: e.status === "다녀옴" ? "다녀옴" : "가보자",
     rating: Number(e.rating) || 0,
     review: String(e.review||""),
@@ -792,13 +780,34 @@ function normalize(e){
 function loadDemo(){
   var raw = storeGet(LS.entries);
   if (raw === null) {
+    // 처음 여는 브라우저: 예시 표제어 1개(금돼지식당)로만 시작
     state.entries = seedEntries();
     saveDemo();
-  } else {
-    var arr = parseJSON(raw);
-    state.entries = Array.isArray(arr) ? arr.map(normalize) : [];
+    storeSet(LS.sampleVersion, SAMPLE_VERSION);
+    state.loaded = true;
+    return;
   }
+  var arr = parseJSON(raw);
+  state.entries = Array.isArray(arr) ? arr.map(normalize) : [];
+  migrateSamples();
   state.loaded = true;
+}
+
+/*
+ * 예시 표제어 버전 마이그레이션.
+ * 예전 버전은 예시 8개를 넣었으므로, 이미 데모를 열어 localStorage에 8개가 남은 브라우저에서도
+ * 사용자가 직접 적은 표제어는 그대로 두고 예전 예시만 걷어내 금돼지식당 1개로 맞춥니다.
+ * (예시를 이미 지운 브라우저에는 다시 넣지 않습니다.)
+ */
+function migrateSamples(){
+  if (storeGet(LS.sampleVersion) === SAMPLE_VERSION) return;
+  var mine = state.entries.filter(function(e){ return !e.is_sample; });
+  var hadSamples = mine.length !== state.entries.length;
+  var alreadyListed = mine.some(function(e){ return e.name === SAMPLES[0].name; });
+  if (hadSamples && !alreadyListed) mine = mine.concat(seedEntries());
+  state.entries = mine;
+  saveDemo();
+  storeSet(LS.sampleVersion, SAMPLE_VERSION);
 }
 function saveDemo(){
   storeSet(LS.entries, JSON.stringify(state.entries));
@@ -807,20 +816,39 @@ function saveDemo(){
 /* ============================================================
    카드 / 목록 렌더
    ============================================================ */
+function regionOf(e){ return String((e && e.region) || "").trim(); }
+
+function regionNames(list){
+  var seen = Object.create(null), out = [];
+  (list || state.entries).forEach(function(e){
+    var r = regionOf(e);
+    if (r && !seen[r]) { seen[r] = 1; out.push(r); }
+  });
+  return out.sort(function(a,b){ return a.localeCompare(b, "ko"); });
+}
+
 function visibleEntries(){
   var q = state.q.trim().toLowerCase();
   var isCho = /^[ㄱ-ㅎ]+$/.test(q);
   return state.entries.filter(function(e){
     if (state.cat !== "전체" && e.category !== state.cat) return false;
+    if (state.region !== "전체" && regionOf(e) !== state.region) return false;
     if (state.status === "가보자" && e.status !== "가보자") return false;
     if (state.status === "다녀옴" && e.status !== "다녀옴") return false;
     if (!q) return true;
-    var hay = [e.name, e.region, e.menu, e.month, e.memo, e.review, e.category, e.author, (e.links||[]).map(function(l){return l.label;}).join(" ")]
+    var hay = [e.name, e.region, e.menu, e.month, e.memo, e.review, e.category, (e.links||[]).map(function(l){return l.label;}).join(" ")]
       .join(" ").toLowerCase();
     if (hay.indexOf(q) > -1) return true;
     if (isCho && choseong(e.name).indexOf(q) > -1) return true;
     return false;
   }).sort(function(a,b){
+    if (state.sort === "region") {
+      var ra = regionOf(a), rb = regionOf(b);
+      if (!ra && rb) return 1;
+      if (ra && !rb) return -1;
+      if (ra !== rb) return ra.localeCompare(rb, "ko");
+      return a.name.localeCompare(b.name, "ko");
+    }
     var la = ORDER.indexOf(initialOf(a.name));
     var lb = ORDER.indexOf(initialOf(b.name));
     if (la !== lb) return la - lb;
@@ -852,16 +880,36 @@ function renderChips(){
     var on = state.status === s;
     return '<button type="button" class="chip' + (on?" on":"") + '" data-status="' + esc(s) + '" aria-pressed="' + on + '">' + label + '</button>';
   }).join("");
+
+  // 지역 (지금 사전에 있는 지역만 동적으로)
+  var regionRow = $("#regionRow");
+  var regions = regionNames();
+  if (state.region !== "전체" && regions.indexOf(state.region) < 0) state.region = "전체";
+  regionRow.hidden = !regions.length;
+  regionRow.innerHTML = (regions.length ? ["전체"].concat(regions) : []).map(function(r){
+    var key = r === "전체" ? "전체" : r;
+    var on = state.region === key;
+    var n = key === "전체" ? state.entries.length : state.entries.filter(function(e){ return regionOf(e) === key; }).length;
+    return '<button type="button" class="chip' + (on?" on":"") + '" data-region="' + esc(key) + '" aria-pressed="' + on + '" aria-label="' +
+      esc(key === "전체" ? "전체 지역" : key + " " + n + "곳") + '">' +
+      esc(key === "전체" ? "전체 지역" : key) + (key === "전체" ? "" : '<span class="chip-n" aria-hidden="true">' + n + '</span>') + '</button>';
+  }).join("");
+
+  // 정렬
+  $("#sortRow").hidden = state.entries.length < 2;
+  $$("#sortSeg button").forEach(function(b){
+    b.classList.toggle("on", b.getAttribute("data-sort") === state.sort);
+  });
 }
 
-function cardHTML(e, i){
+function cardHTML(e, i, byRegion){
   var L = initialOf(e.name);
   var no = String(i+1).padStart(2,"0");
   var done = e.status === "다녀옴";
   var firstLink = (e.links||[])[0];
   var html = '<li class="entry ' + (done ? "is-done" : "is-wish") + '" data-id="' + esc(e.id) + '" tabindex="0" aria-label="' + esc(e.name) + ' 자세히 보기">' +
     '<div class="entry-main">' +
-      '<p class="entry-no"><span>' + esc(L) + ' ' + no + '</span>' + (e.is_sample ? '<span class="sample-tag">예시</span>' : '') + '</p>' +
+      '<p class="entry-no"><span>' + (byRegion ? no : esc(L) + ' ' + no) + '</span>' + (e.is_sample ? '<span class="sample-tag">예시</span>' : '') + '</p>' +
       '<h3 class="headword' + (e.name.length > 17 ? " long" : "") + '">' + esc(e.name) + '</h3>' +
       '<p class="gloss"><span>' + catEmoji(e.category) + ' ' + esc(e.category) + '</span>' +
         (e.region ? '<span class="tag-mini">' + esc(e.region) + '</span>' : '') + '</p>' +
@@ -872,7 +920,6 @@ function cardHTML(e, i){
       '<button type="button" class="pill ' + (done ? "done" : "wish") + '" data-act="status" aria-label="' +
         (done ? "가보자로 되돌리기" : "다녀온 곳으로 기록하기") + '">' + (done ? "✅ 다녀옴" : "📌 가보자") + '</button>' +
       (done && e.rating ? '<span class="stars" aria-label="별점 ' + e.rating + '점">' + starStr(e.rating) + '</span>' : '') +
-      (e.author ? '<span class="author">' + esc(e.author) + '</span>' : '') +
       (firstLink ? '<a class="mini-link" href="' + esc(normUrl(firstLink.url)) + '" target="_blank" rel="noopener noreferrer" aria-label="관련 사이트 열기">' + linkEmoji(firstLink) + '</a>' : '') +
     '</div>' +
   '</li>';
@@ -893,63 +940,82 @@ function emptyHTML(){
 
 function renderAlphaAndList(){
   var items = visibleEntries();
+  var byRegion = state.sort === "region";
   var groups = new Map();
   items.forEach(function(e){
-    var L = initialOf(e.name);
-    if (!groups.has(L)) groups.set(L, []);
-    groups.get(L).push(e);
+    var K = byRegion ? (regionOf(e) || "지역 미정") : initialOf(e.name);
+    if (!groups.has(K)) groups.set(K, []);
+    groups.get(K).push(e);
   });
 
-  // 인덱스
+  // 인덱스 (지역별 모아보기에서는 숨김)
   var alpha = $("#alpha");
-  var keepScroll = alpha.scrollLeft;
-  alpha.innerHTML = ORDER.map(function(L){
-    var on = groups.has(L);
-    var sep = (L === "A" || L === "#") ? '<span class="alpha-sep" aria-hidden="true"></span>' : "";
-    return sep + '<button type="button" data-letter="' + esc(L) + '" class="' + (on ? "has" : "") + '"' +
-      (on ? '' : ' disabled') + ' aria-label="' + esc(L) + ' 표제어로 이동">' + esc(L) + '</button>';
-  }).join("");
-  alpha.scrollLeft = keepScroll;
+  alpha.hidden = byRegion;
+  if (!byRegion) {
+    var keepScroll = alpha.scrollLeft;
+    alpha.innerHTML = ORDER.map(function(L){
+      var on = groups.has(L);
+      var sep = (L === "A" || L === "#") ? '<span class="alpha-sep" aria-hidden="true"></span>' : "";
+      return sep + '<button type="button" data-letter="' + esc(L) + '" class="' + (on ? "has" : "") + '"' +
+        (on ? '' : ' disabled') + ' aria-label="' + esc(L) + ' 표제어로 이동">' + esc(L) + '</button>';
+    }).join("");
+    alpha.scrollLeft = keepScroll;
+  }
   letterActive = null;
 
   // 섹션
   var html = "";
-  ORDER.forEach(function(L){
-    var arr = groups.get(L);
+  var keys = byRegion
+    ? Array.from(groups.keys())
+    : ORDER.filter(function(L){ return groups.has(L); });
+  keys.forEach(function(K){
+    var arr = groups.get(K);
     if (!arr) return;
-    html += '<section class="letter-sec" data-letter="' + esc(L) + '">' +
-      '<div class="letter-head"><span class="letter-glyph">' + esc(L) + '</span><span class="letter-line"></span>' +
+    var head = byRegion
+      ? '<span class="region-glyph"><span class="rg-pin" aria-hidden="true">📍</span>' + esc(K) + '</span>'
+      : '<span class="letter-glyph">' + esc(K) + '</span>';
+    html += '<section class="letter-sec" data-letter="' + esc(byRegion ? "" : K) + '"' +
+      (byRegion ? ' data-region="' + esc(K) + '"' : '') + '>' +
+      '<div class="letter-head">' + head + '<span class="letter-line"></span>' +
       '<span class="letter-count">' + arr.length + ' 표제어</span></div>' +
-      '<ul class="entries">' + arr.map(cardHTML).join("") + '</ul></section>';
+      '<ul class="entries">' + arr.map(function(e, i){ return cardHTML(e, i, byRegion); }).join("") + '</ul></section>';
   });
   if (!html) html = emptyHTML();
   $("#list").innerHTML = html;
 
   // 결과 줄
-  var rl = $("#resultLine");
-  var filtered = state.q.trim() || state.cat !== "전체" || state.status !== "전체";
+  var filtered = !!(state.q.trim() || state.cat !== "전체" || state.status !== "전체" || state.region !== "전체");
   if (filtered && items.length) {
     var bits = [];
     if (state.q.trim()) bits.push('“' + esc(state.q.trim()) + '”');
     if (state.cat !== "전체") bits.push(catEmoji(state.cat) + " " + esc(state.cat));
+    if (state.region !== "전체") bits.push("📍 " + esc(state.region));
     if (state.status !== "전체") bits.push(state.status === "가보자" ? "📌 가보자" : "✅ 다녀옴");
     $("#resultLine").hidden = false;
     $("#resultLine").innerHTML = '<span>찾은 표제어</span><b>' + bits.join(" · ") + '</b><span>' + items.length + '개</span>' +
       '<button type="button" class="rl-x" data-act="reset">필터 지우기</button>';
-  } else if (filtered && !items.length) {
+  } else if (filtered) {
+    var none = [];
+    if (state.q.trim()) none.push('“' + esc(state.q.trim()) + '”');
+    if (state.region !== "전체") none.push("📍 " + esc(state.region));
     $("#resultLine").hidden = false;
-    $("#resultLine").innerHTML = '<span>찾은 표제어</span><b>' + (state.q.trim() ? '“' + esc(state.q.trim()) + '”' : "조건") + '</b><span>0개</span>' +
+    $("#resultLine").innerHTML = '<span>찾은 표제어</span><b>' + (none.join(" · ") || "조건") + '</b><span>0개</span>' +
       '<button type="button" class="rl-x" data-act="reset">필터 지우기</button>';
+  } else if (byRegion && items.length) {
+    $("#resultLine").hidden = false;
+    $("#resultLine").innerHTML = '<span>모아보기</span><b>📍 지역별</b><span>' + items.length + '개</span>' +
+      '<button type="button" class="rl-x" data-act="reset-sort">ㄱ~ㅎ 순으로</button>';
   } else {
     $("#resultLine").hidden = true;
     $("#resultLine").innerHTML = "";
   }
 
-  markActiveLetter();
+  if (!byRegion) markActiveLetter();
 }
 
 function markActiveLetter(){
   var alpha = $("#alpha");
+  if (alpha.hidden) return;
   var offset = alpha.offsetHeight + 8;
   var secs = $$(".letter-sec");
   var current = "";
@@ -1056,7 +1122,6 @@ function openDetail(id){
   var done = e.status === "다녀옴";
   var links = (e.links||[]).filter(function(l){ return l.url; });
   var metaBits = [];
-  if (e.author) metaBits.push(esc(e.author));
   metaBits.push("등록 " + (fmtDate(e.created_at) || "—"));
   if (e.updated_at && e.updated_at !== e.created_at) metaBits.push("수정 " + fmtDate(e.updated_at));
 
@@ -1211,11 +1276,11 @@ function openVisit(id){
 /* ============================================================
    추가 / 수정 폼
    ============================================================ */
-function openForm(id){
+function openForm(id, preset){
   var src = id ? findEntry(id) : null;
   var d = src ? JSON.parse(JSON.stringify(src)) : {
-    name:"", category:"맛집", region:"", menu:"", month:"", links:[], memo:"",
-    author:"주형", status:"가보자", rating:0, review:"", is_sample:false
+    name:"", category:(preset && preset.category) || "맛집", region:(preset && preset.region) || "", menu:"", month:"", links:[], memo:"",
+    status:"가보자", rating:0, review:"", is_sample:false
   };
   d.links = d.links || [];
   while (d.links.length < 2) d.links.push({ label:"", url:"" });
@@ -1252,16 +1317,10 @@ function openForm(id){
         '<div class="field"><label for="fMonth">추천 방문월 · 시기</label>' +
           '<input class="input" id="fMonth" maxlength="40" placeholder="예: 🌸 4월 벚꽃" value="' + esc(d.month) + '" autocomplete="off"></div>' +
       '</div>' +
-      '<div class="grid2">' +
-        '<div class="field"><label>작성자</label><div class="chiprow" id="fAuthor" style="margin-top:0">' +
-          AUTHORS.concat((d.author && AUTHORS.indexOf(d.author) < 0) ? [d.author] : []).map(function(a){
-            return '<button type="button" class="chip' + (d.author === a ? " on" : "") + '" data-author="' + esc(a) + '">' + esc(a) + '</button>';
-          }).join("") + '</div></div>' +
-        '<div class="field"><label>상태</label><div class="seg" id="fStatus">' +
-          '<button type="button" data-v="가보자" class="' + (d.status === "가보자" ? "on" : "") + '">📌 가보자</button>' +
-          '<button type="button" data-v="다녀옴" class="' + (d.status === "다녀옴" ? "on" : "") + '">✅ 다녀옴</button>' +
-        '</div></div>' +
-      '</div>' +
+      '<div class="field"><label>상태</label><div class="seg" id="fStatus">' +
+        '<button type="button" data-v="가보자" class="' + (d.status === "가보자" ? "on" : "") + '">📌 가보자</button>' +
+        '<button type="button" data-v="다녀옴" class="' + (d.status === "다녀옴" ? "on" : "") + '">✅ 다녀옴</button>' +
+      '</div></div>' +
       '<div id="visitFields"' + (d.status === "다녀옴" ? "" : " hidden") + '>' +
         '<div class="field"><label>별점</label><div class="star-input" id="fStars">' +
           [1,2,3,4,5].map(function(n){
@@ -1298,13 +1357,6 @@ function openForm(id){
     b.addEventListener("click", function(){
       d.category = b.getAttribute("data-cat");
       $$("#fCat .chip", sheet).forEach(function(x){ x.classList.toggle("on", x === b); });
-    });
-  });
-  // 작성자
-  $$("#fAuthor .chip", sheet).forEach(function(b){
-    b.addEventListener("click", function(){
-      d.author = b.getAttribute("data-author");
-      $$("#fAuthor .chip", sheet).forEach(function(x){ x.classList.toggle("on", x === b); });
     });
   });
   // 상태
@@ -1375,7 +1427,6 @@ function openForm(id){
       month: $("#fMonth", sheet).value.trim(),
       links: links,
       memo: $("#fMemo", sheet).value.trim(),
-      author: d.author,
       status: d.status,
       rating: d.rating || 0,
       review: $("#fReview", sheet) ? $("#fReview", sheet).value.trim() : "",
@@ -1408,8 +1459,8 @@ function openForm(id){
    오늘 어디 갈까 (랜덤)
    ============================================================ */
 function openRandom(){
-  var pool = state.entries.filter(function(e){ return e.status === "가보자"; });
-  if (!pool.length) {
+  var wish = state.entries.filter(function(e){ return e.status === "가보자"; });
+  if (!wish.length) {
     var empty = openSheet('<div class="sheet-grip"></div>' +
       '<div class="sheet-head"><span class="cat-badge">🎲 랜덤 뽑기</span>' +
       '<button class="icon-x" type="button" data-close aria-label="닫기">✕</button></div>' +
@@ -1422,11 +1473,18 @@ function openRandom(){
     return;
   }
 
+  var regions = regionNames(wish);
+  var randRegion = "전체";
+
   var html = '<div class="sheet-grip"></div>' +
     '<div class="sheet-head"><span class="cat-badge">🎲 랜덤 뽑기</span>' +
       '<button class="icon-x" type="button" data-close aria-label="닫기">✕</button></div>' +
     '<div class="rand-body">' +
-      '<p class="rand-eyebrow">Today’s Pick · 가보자 ' + pool.length + '곳 중에서</p>' +
+      '<div class="rand-region">' +
+        '<p class="rand-region-k">어느 지역에서 뽑을까요</p>' +
+        '<div class="chiprow wrap" id="randRegionRow" role="group" aria-label="랜덤 지역 선택"></div>' +
+      '</div>' +
+      '<p class="rand-eyebrow" id="randEyebrow">Today’s Pick</p>' +
       '<h2 class="rand-title">오늘 어디 갈까?</h2>' +
       '<p class="rand-sub" id="randSub">사전을 넘겨보는 중…</p>' +
       '<div class="rand-stage"><p class="rand-name spinning" id="randName">…</p><p class="rand-meta" id="randMeta"></p>' +
@@ -1439,19 +1497,58 @@ function openRandom(){
 
   var sheet = openSheet(html, "rand-panel");
   bindCommonClose(sheet);
-  var nameEl = $("#randName", sheet), metaEl = $("#randMeta", sheet), cardEl = $("#randCard", sheet), subEl = $("#randSub", sheet);
+  var nameEl = $("#randName", sheet), metaEl = $("#randMeta", sheet), cardEl = $("#randCard", sheet),
+      subEl = $("#randSub", sheet), eyebrowEl = $("#randEyebrow", sheet),
+      regionRow = $("#randRegionRow", sheet), actionsEl = $("#randActions", sheet);
+
+  function pool(){
+    return randRegion === "전체" ? wish : wish.filter(function(e){ return regionOf(e) === randRegion; });
+  }
+
+  function paintRegions(){
+    var p = pool();
+    regionRow.innerHTML = ["전체"].concat(regions).map(function(r){
+      var key = r === "전체" ? "전체" : r;
+      var n = key === "전체" ? wish.length : wish.filter(function(e){ return regionOf(e) === key; }).length;
+      var on = randRegion === key;
+      return '<button type="button" class="chip' + (on ? " on" : "") + '" data-rand-region="' + esc(key) + '" aria-pressed="' + on + '" aria-label="' +
+        esc(key === "전체" ? "전체 지역에서 뽑기" : key + "에서 뽑기, " + n + "곳") + '">' +
+        esc(key === "전체" ? "전체 지역" : key) + (key === "전체" ? "" : '<span class="chip-n" aria-hidden="true">' + n + '</span>') + '</button>';
+    }).join("");
+    eyebrowEl.textContent = "Today’s Pick · " + (randRegion === "전체" ? "가보자" : randRegion) + " " + p.length + "곳 중에서";
+  }
+
+  function showNoCandidates(){
+    clearInterval(sheet._timer);
+    sheet._pick = null;
+    nameEl.classList.remove("spinning");
+    nameEl.textContent = "후보가 없어요";
+    metaEl.textContent = "";
+    subEl.textContent = "‘" + randRegion + "’에 가보자 표제어가 아직 없어요.";
+    cardEl.innerHTML = '<div class="rand-card"><p class="rc-cat">다른 지역을 고르거나, 이 지역에 갈 곳을 먼저 적어두세요</p>' +
+      '<div class="rand-empty-acts">' +
+      '<button class="btn btn-ghost" type="button" data-act="all-regions">전체 지역에서 뽑기</button>' +
+      '<button class="btn btn-ghost" type="button" data-act="add-here">＋ 이 지역 표제어</button>' +
+      '</div></div>';
+    actionsEl.innerHTML = "";
+  }
 
   function spin(){
+    var p = pool();
+    clearInterval(sheet._timer);
+    sheet._pick = null;
+    if (!p.length) { showNoCandidates(); return; }
     nameEl.classList.add("spinning");
     nameEl.textContent = "…";
     metaEl.textContent = "";
     cardEl.innerHTML = "";
     subEl.textContent = "사전을 넘겨보는 중…";
+    actionsEl.innerHTML = '<button class="btn btn-ghost" type="button" data-act="again">↻ 다시 뽑기</button>' +
+      '<button class="btn btn-ink" type="button" data-act="close">좋아, 이걸로</button>';
     var count = 0;
-    clearInterval(sheet._timer);
     sheet._timer = setInterval(function(){
       if (!document.body.contains(nameEl)) { clearInterval(sheet._timer); return; }
-      var r = pool[Math.floor(Math.random()*pool.length)];
+      var r = p[Math.floor(Math.random()*p.length)];
       nameEl.textContent = r.name;
       count++;
       if (count > 13) {
@@ -1462,7 +1559,9 @@ function openRandom(){
   }
 
   function reveal(){
-    var pick = pool[Math.floor(Math.random()*pool.length)];
+    var p = pool();
+    if (!p.length) { showNoCandidates(); return; }
+    var pick = p[Math.floor(Math.random()*p.length)];
     nameEl.classList.remove("spinning");
     nameEl.textContent = pick.name;
     metaEl.textContent = catEmoji(pick.category) + " " + pick.category + (pick.region ? " · " + pick.region : "");
@@ -1472,24 +1571,49 @@ function openRandom(){
     if (pick.month) lines += '<p class="rc-line"><b>시기</b>' + esc(pick.month) + '</p>';
     if (pick.memo) lines += '<p class="rc-line"><b>메모</b>' + esc(pick.memo.length > 60 ? pick.memo.slice(0,60) + "…" : pick.memo) + '</p>';
     var firstLink = (pick.links||[])[0];
-    cardEl.innerHTML = '<div class="rand-card"><p class="rc-cat">' + esc(pick.author || "우리 사전") + '의 표제어' + (pick.is_sample ? " · 예시" : "") + '</p>' + lines + '</div>';
-    var actions = $("#randActions", sheet);
-    actions.innerHTML =
+    cardEl.innerHTML = '<div class="rand-card"><p class="rc-cat">' +
+      (pick.region ? esc(pick.region) + " · " : "") + '오늘의 표제어' + (pick.is_sample ? " · 예시" : "") + '</p>' + lines + '</div>';
+    actionsEl.innerHTML =
       '<button class="btn btn-ghost" type="button" data-act="again">↻ 다시</button>' +
       (firstLink ? '<a class="btn btn-ghost" href="' + esc(normUrl(firstLink.url)) + '" target="_blank" rel="noopener noreferrer">↗ 사이트</a>' : '') +
       '<button class="btn btn-accent" type="button" data-act="detail">자세히</button>';
-    $('[data-act="again"]', actions).addEventListener("click", spin);
-    $('[data-act="detail"]', actions).addEventListener("click", function(){
-      closeSheet(sheet);
-      openDetail(pick.id);
-    });
     sheet._pick = pick;
   }
 
-  spin();
+  regionRow.addEventListener("click", function(ev){
+    var b = ev.target.closest("[data-rand-region]");
+    if (!b) return;
+    var next = b.getAttribute("data-rand-region");
+    if (next === randRegion) return;
+    randRegion = next;
+    paintRegions();
+    spin();
+  });
 
-  $('[data-act="again"]', sheet).addEventListener("click", spin);
-  $('[data-act="close"]', sheet).addEventListener("click", function(){ closeSheet(sheet); });
+  sheet.addEventListener("click", function(ev){
+    var b = ev.target.closest("[data-act]");
+    if (!b) return;
+    var act = b.getAttribute("data-act");
+    if (act === "again") { spin(); }
+    else if (act === "close") { closeSheet(sheet); }
+    else if (act === "detail") {
+      if (!sheet._pick) return;
+      var id = sheet._pick.id;
+      closeSheet(sheet);
+      openDetail(id);
+    } else if (act === "all-regions") {
+      randRegion = "전체";
+      paintRegions();
+      spin();
+    } else if (act === "add-here") {
+      var r = randRegion === "전체" ? "" : randRegion;
+      closeSheet(sheet);
+      openForm(null, { region: r, category: "맛집" });
+    }
+  });
+
+  paintRegions();
+  spin();
 }
 
 /* ============================================================
@@ -1507,7 +1631,7 @@ function openSettings(){
         '<input class="input input-title" id="sTitle" maxlength="40" value="' + esc(state.title) + '"></div>' +
       '<div class="sdivider"></div>' +
       '<p class="section-k">Supabase 실시간 연결</p>' +
-      '<p class="hint" style="margin-bottom:12px">연결하면 주형과 여자친구의 폰이 같은 사전을 봅니다. 연결 전에는 이 브라우저에만 저장돼요.</p>' +
+      '<p class="hint" style="margin-bottom:12px">연결하면 두 사람의 폰이 같은 사전을 봅니다. 연결 전에는 이 브라우저에만 저장돼요.</p>' +
       '<div class="field"><label for="sUrl">Project URL</label>' +
         '<input class="input" id="sUrl" inputmode="url" spellcheck="false" placeholder="https://xxxxxxxx.supabase.co" value="' + esc(cfg.url || "") + '"></div>' +
       '<div class="field"><label for="sKey">Anon public key</label>' +
@@ -1720,7 +1844,6 @@ function toRow(e){
     link2_label: l2.label || "",
     link2_url: l2.url || "",
     memo: e.memo,
-    author: e.author,
     status: e.status,
     rating: e.rating || null,
     review: e.review,
@@ -1740,7 +1863,6 @@ function fromRow(r){
       r.link2_url ? { label:r.link2_label, url:r.link2_url } : null
     ].filter(Boolean),
     memo: r.memo,
-    author: r.author,
     status: r.status,
     rating: r.rating,
     review: r.review,
@@ -1879,6 +2001,20 @@ function bindEvents(){
     renderChips();
     renderAlphaAndList();
   });
+  $("#regionRow").addEventListener("click", function(ev){
+    var b = ev.target.closest("[data-region]");
+    if (!b) return;
+    state.region = b.getAttribute("data-region");
+    renderChips();
+    renderAlphaAndList();
+  });
+  $("#sortSeg").addEventListener("click", function(ev){
+    var b = ev.target.closest("[data-sort]");
+    if (!b) return;
+    state.sort = b.getAttribute("data-sort");
+    renderChips();
+    renderAlphaAndList();
+  });
 
   $("#alpha").addEventListener("click", function(ev){
     var b = ev.target.closest("button[data-letter]");
@@ -1892,9 +2028,17 @@ function bindEvents(){
   });
 
   var list = $("#list");
+  $("#resultLine").addEventListener("click", function(ev){
+    var reset = ev.target.closest('[data-act="reset"]');
+    if (reset) { resetFilters(); return; }
+    var resort = ev.target.closest('[data-act="reset-sort"]');
+    if (resort) { state.sort = "letter"; renderChips(); renderAlphaAndList(); }
+  });
   list.addEventListener("click", function(ev){
     var reset = ev.target.closest('[data-act="reset"]');
     if (reset) { resetFilters(); return; }
+    var resort = ev.target.closest('[data-act="reset-sort"]');
+    if (resort) { state.sort = "letter"; renderChips(); renderAlphaAndList(); return; }
     var add = ev.target.closest('[data-act="add"]');
     if (add) { openForm(null); return; }
     var pill = ev.target.closest('[data-act="status"]');
@@ -1965,6 +2109,7 @@ function bindEvents(){
 function resetFilters(){
   state.q = "";
   state.cat = "전체";
+  state.region = "전체";
   state.status = "전체";
   $("#q").value = "";
   $("#qClear").hidden = true;
