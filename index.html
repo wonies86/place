@@ -1318,7 +1318,7 @@ function renderMapAll(){
   var marks = ZONES.map(function(z){
     var b = st.map[z.key];
     var x = z.anchor[0], y = z.anchor[1];
-    if (b.done > 0 || sel === z.key) return '<text class="zlabel" x="' + (x + 18) + '" y="' + (y + 3.2) + '" text-anchor="start">' + esc(z.short) + '</text>';
+    if (b.done > 0 || sel === z.key) return '<text class="zlabel" x="' + (x + 21) + '" y="' + (y + 3.2) + '" text-anchor="start">' + esc(z.short) + '</text>';
     return "";
   }).join("");
   var pins = ZONES.map(function(z){
@@ -1327,7 +1327,7 @@ function renderMapAll(){
     if (!b.done && !b.wish) return "";
     if (b.done > 0) {
       return '<g class="zbadge" transform="translate(' + x + ',' + y + ')" aria-hidden="true">' +
-        '<circle r="9.5"></circle><text text-anchor="middle" dy="3.2">' + b.done + '</text></g>';
+        '<circle r="9"></circle><text text-anchor="middle" dy="3.2">' + b.done + '</text></g>';
     }
     return '<circle class="zdot" cx="' + x + '" cy="' + y + '" r="4.2" aria-hidden="true"></circle>';
   }).join("");
