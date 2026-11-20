@@ -12,8 +12,9 @@ create extension if not exists pgcrypto;
 create table if not exists public.place_entries (
   id             uuid primary key default gen_random_uuid(),
   name           text not null,                       -- 표제어: 맛집 이름 / 장소명
-  category       text not null default '맛집',        -- 맛집 | 카페 | 명소 | 바·술집 | 놀거리
+  category       text not null default '맛집',        -- 맛집 | 장소 | 캠핑장 (예전 값은 앱이 자동으로 옮깁니다)
   region         text default '',                     -- 지역·동네: 성수, 을지로, 교토, 제주 …
+  zone           text default '',                     -- 지도 권역: 서울, 경기·인천, 강원 … (빈 값 = 지역 이름으로 자동, '밖' = 지도 밖)
   recommend_menu text default '',                     -- 추천 메뉴·볼거리
   visit_month    text default '',                     -- 추천 방문월·시기
   link1_label    text default '',                     -- 인스타그램 | 네이버지도 | 유튜브 | 블로그 | 홈페이지 | 기타
@@ -32,6 +33,7 @@ create table if not exists public.place_entries (
 
 -- 예전 스키마로 만든 프로젝트에서도 안전하게 칼럼을 더합니다 (재실행 OK)
 alter table public.place_entries add column if not exists region         text default '';
+alter table public.place_entries add column if not exists zone           text default '';
 alter table public.place_entries add column if not exists recommend_menu text default '';
 alter table public.place_entries add column if not exists visit_month    text default '';
 alter table public.place_entries add column if not exists link1_label    text default '';
@@ -126,10 +128,10 @@ alter table public.place_entries replica identity full;
 --    앱의 "예시 표제어"와 같은 내용입니다. 필요 없으면 건너뛰세요.
 -- ------------------------------------------------------------
 -- insert into public.place_entries
---   (name, category, region, recommend_menu, visit_month, link1_label, link1_url,
+--   (name, category, region, zone, recommend_menu, visit_month, link1_label, link1_url,
 --    memo, status, rating, review, is_sample)
 -- values
---   ('금돼지식당', '맛집', '성수', '🥩 삼겹살 · 목살', '🌙 11월', '인스타그램',
+--   ('금돼지식당', '맛집', '성수', '', '🥩 삼겹살 · 목살', '🌙 11월', '인스타그램',
 --    'https://www.instagram.com/explore/tags/금돼지식당/',
 --    '웨이팅이 길다는 소문. 오픈 30분 전에 가서 이름 걸어두기.', '가보자', null, '', true);
 
